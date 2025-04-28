@@ -1,18 +1,9 @@
-package edu.tcu.cs.frogcreweventscheduler.schedule;
+package edu.tcu.cs.frogcreweventscheduler.schedule.dto;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 
-@Entity
-@Table(name = "game_schedule")
-public class GameSchedule {
+public class GameScheduleDto {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @NotBlank(message = "Sport is required.")
@@ -21,7 +12,7 @@ public class GameSchedule {
     @NotBlank(message = "Season is required.")
     private String season;
 
-    public GameSchedule() { }
+    public GameScheduleDto() { }
 
     public Integer getId() {
         return id;
