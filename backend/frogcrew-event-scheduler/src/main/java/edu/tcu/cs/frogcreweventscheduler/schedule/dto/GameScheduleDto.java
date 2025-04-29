@@ -14,6 +14,7 @@ public class GameScheduleDto {
 
     public GameScheduleDto() { }
 
+
     public Integer getId() {
         return id;
     }
