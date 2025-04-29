@@ -2,40 +2,48 @@ package edu.tcu.cs.frogcreweventscheduler.system.exception;
 
 import edu.tcu.cs.frogcreweventscheduler.system.Result;
 import edu.tcu.cs.frogcreweventscheduler.system.StatusCode;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
-import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.stream.Collectors;
 
-/**
- * Catches exceptions across controllers and wraps them in the standard Result response.
- */
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    // 1) Domain “not found” exceptions → code 404
     @ExceptionHandler(ObjectNotFoundException.class)
-    public ResponseEntity<Result> handleNotFound(ObjectNotFoundException ex) {
-        Result result = new Result(false, StatusCode.NOT_FOUND, ex.getMessage());
-        return ResponseEntity.ok(result);
+    @ResponseBody
+    public Result handleNotFound(ObjectNotFoundException ex) {
+        return new Result(false, StatusCode.NOT_FOUND, ex.getMessage(), null);
     }
 
+    // 2) Validation failures → code 400
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Result> handleValidation(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
-        for (FieldError fe : ex.getBindingResult().getFieldErrors()) {
-            errors.put(fe.getField(), fe.getDefaultMessage());
-        }
-        Result result = new Result(false, StatusCode.INVALID_ARGUMENT, "Validation failed", errors);
-        return ResponseEntity.ok(result);
+    @ResponseBody
+    public Result handleValidation(MethodArgumentNotValidException ex) {
+        String messages = ex.getBindingResult().getFieldErrors().stream()
+                .map(FieldError::getDefaultMessage)
+                .collect(Collectors.joining("; "));
+        return new Result(false, StatusCode.INVALID_ARGUMENT, messages, null);
     }
 
+    // 3) Malformed JSON → also treat as bad request
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    @ResponseBody
+    public Result handleParseError(HttpMessageNotReadableException ex) {
+        return new Result(false, StatusCode.INVALID_ARGUMENT,
+                "Malformed request body: " + ex.getMostSpecificCause().getMessage(),
+                null);
+    }
+
+    // 4) Everything else → code 500
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Result> handleOther(Exception ex) {
-        Result result = new Result(false, StatusCode.INTERNAL_SERVER_ERROR, ex.getMessage());
-        return ResponseEntity.ok(result);
+    @ResponseBody
+    public Result handleAllOther(Exception ex) {
+        return new Result(false, StatusCode.INTERNAL_SERVER_ERROR,
+                "Server error: " + ex.getMessage(),
+                null);
     }
 }
