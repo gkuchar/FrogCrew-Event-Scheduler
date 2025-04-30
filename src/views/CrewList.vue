@@ -9,7 +9,7 @@
 
       <!-- Filter Controls -->
       <div class="bg-white rounded-lg shadow-md p-4 mb-6">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <!-- Sport Filter -->
           <div>
             <label for="sport" class="block text-sm font-medium text-gray-700 mb-1">Sport</label>
@@ -49,19 +49,6 @@
               placeholder="Search by name or position..."
               class="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
             />
-          </div>
-
-          <!-- Sort (Admin Only) -->
-          <div v-if="isAdmin">
-            <label for="sortBy" class="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
-            <select
-              id="sortBy"
-              v-model="sortBy"
-              class="w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
-            >
-              <option value="name">Name</option>
-              <option value="position">Position</option>
-            </select>
           </div>
         </div>
       </div>
@@ -103,13 +90,10 @@
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Report Location
                     </th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
                   </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                  <tr v-for="(position, idx) in getSortedPositions(crewList.positions)" :key="position.position">
+                  <tr v-for="position in crewList.positions" :key="position.position">
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {{ position.position }}
                     </td>
@@ -128,10 +112,6 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {{ position.reportLocation }}
-                    </td>
-                    <!-- Delete button for admin -->
-                    <td v-if="isAdmin" class="px-6 py-4 whitespace-nowrap text-sm text-red-600">
-                      <button @click="deleteCrewMember(crewList.id, idx)" class="hover:underline">Delete</button>
                     </td>
                   </tr>
                 </tbody>
@@ -205,9 +185,7 @@ export default {
       selectedSport: '',
       selectedDateRange: 'all',
       searchQuery: '',
-      isLoading: false,
-      isAdmin: false,
-      sortBy: 'name'
+      isLoading: false
     }
   },
   computed: {
@@ -266,22 +244,6 @@ export default {
         hour12: true
       })
     },
-    getSortedPositions(positions) {
-      let sorted = [...positions]
-      if (this.sortBy === 'name') {
-        sorted.sort((a, b) => a.name.localeCompare(b.name))
-      } else if (this.sortBy === 'position') {
-        sorted.sort((a, b) => a.position.localeCompare(b.position))
-      }
-      return sorted
-    },
-    deleteCrewMember(crewListId, posIdx) {
-      const listIdx = this.crewLists.findIndex(list => list.id === crewListId)
-      if (listIdx !== -1) {
-        this.crewLists[listIdx].positions.splice(posIdx, 1)
-        localStorage.setItem('crewLists', JSON.stringify(this.crewLists))
-      }
-    },
     async loadCrewLists() {
       this.isLoading = true;
       try {
@@ -302,9 +264,6 @@ export default {
   },
   async created() {
     await this.loadCrewLists();
-    // Set isAdmin from localStorage
-    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}')
-    this.isAdmin = currentUser?.role === 'Admin'
   }
 }
 </script>

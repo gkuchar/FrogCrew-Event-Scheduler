@@ -158,7 +158,7 @@ export default {
   }
 }
 </script>
-
+  
 <style scoped>
 .manage-crew {
   padding: 20px;

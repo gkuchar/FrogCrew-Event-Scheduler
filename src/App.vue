@@ -7,12 +7,13 @@
         <nav class="flex flex-col gap-3 w-full px-4">
           <!-- Navigation links for all authenticated users -->
           <router-link to="/home" class="sidebar-link">Homepage</router-link>
-          <router-link to="/crew-members" class="sidebar-link">Crew Members</router-link>
+          <router-link to="/crewlist" class="sidebar-link">Crew Members</router-link>
           <router-link to="/game-schedule" class="sidebar-link">Schedule</router-link>
-          <router-link to="/trade-board" class="sidebar-link">Trade Board</router-link>
           <!-- Admin-only navigation links -->
           <template v-if="isAdmin">
             <router-link to="/admin" class="sidebar-link">Reports</router-link>
+            <router-link to="/submit-availability" class="sidebar-link">Trade Board</router-link>
+            <router-link to="/manage-crew" class="sidebar-link">Templates</router-link>
           </template>
         </nav>
         <div class="mt-auto w-full px-4">
@@ -57,8 +58,8 @@ export default {
         CrewList: 'Crew Members',
         GameSchedule: 'Games List',
         SubmitAvailability: 'Trade Board',
-        TradeBoard: 'Trade Board',
         Admin: 'Reports',
+        ManageCrew: 'Templates',
         Login: 'Login'
       }
       return map[this.$route.name] || ''
@@ -75,7 +76,7 @@ export default {
       this.isAdmin = currentUser?.role === 'Admin'
 
       // Redirect if accessing admin pages without admin rights
-      const adminRoutes = ['Admin', 'SubmitAvailability']
+      const adminRoutes = ['Admin', 'SubmitAvailability', 'ManageCrew']
       if (!this.isAdmin && adminRoutes.includes(this.$route.name)) {
         this.$router.push('/home')
       }

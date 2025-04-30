@@ -12,53 +12,14 @@ import CrewList from './views/CrewList.vue'
 import CrewMemberProfile from './views/CrewMemberProfile.vue'
 import GameSchedule from './views/GameSchedule.vue'
 import SubmitAvailability from './components/SubmitAvailability.vue'
-import CrewMemberList from './views/CrewMemberList.vue'
-import TradeBoard from './components/TradeBoard.vue'
 
 const routes = [
-  {
-    path: '/',
-    redirect: '/login'
+  { 
+    path: '/', 
+    redirect: '/home'
   },
-  {
-    path: '/home',
-    name: 'Home',
-    component: Home,
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/crew-members',
-    name: 'CrewMembers',
-    component: CrewMemberList,
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/game-schedule',
-    name: 'GameSchedule',
-    component: GameSchedule,
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/submit-availability',
-    name: 'SubmitAvailability',
-    component: SubmitAvailability,
-    meta: { requiresAuth: true, requiresAdmin: true }
-  },
-  {
-    path: '/admin',
-    name: 'Admin',
-    component: Admin,
-    meta: { requiresAuth: true, requiresAdmin: true }
-  },
-  {
-    path: '/manage-crew',
-    name: 'ManageCrew',
-    component: ManageCrew,
-    meta: { requiresAuth: true, requiresAdmin: true }
-  },
-  {
-    path: '/login',
-    name: 'Login',
+  { 
+    path: '/login', 
     component: Login,
     meta: { requiresAuth: false }
   },
@@ -68,13 +29,33 @@ const routes = [
     meta: { requiresAuth: false }
   },
   { 
+    path: '/home', 
+    component: Home,
+    meta: { requiresAuth: false }
+  },
+  { 
     path: '/crewlist', 
     component: CrewList,
     meta: { requiresAuth: true }
   },
   { 
+    path: '/submit-availability', 
+    component: SubmitAvailability,
+    meta: { requiresAuth: true }
+  },
+  { 
     path: '/invite', 
     component: InviteCrewMember,
+    meta: { requiresAuth: true, requiresAdmin: true }
+  },
+  { 
+    path: '/admin', 
+    component: Admin,
+    meta: { requiresAuth: true, requiresAdmin: true }
+  },
+  { 
+    path: '/manage-crew', 
+    component: ManageCrew,
     meta: { requiresAuth: true, requiresAdmin: true }
   },
   { 
@@ -97,16 +78,15 @@ const routes = [
     component: CrewMemberProfile,
     meta: { requiresAuth: true }
   },
-  {
-    path: '/trade-board',
-    name: 'TradeBoard',
-    component: TradeBoard,
+  { 
+    path: '/game-schedule', 
+    component: GameSchedule,
     meta: { requiresAuth: true }
   }
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(process.env.BASE_URL),
   routes
 })
 
@@ -124,8 +104,8 @@ router.beforeEach((to, from, next) => {
   else if (to.matched.some(record => record.meta.requiresAdmin) && !isAdmin) {
     next('/home')
   }
-  // If user is authenticated and trying to access login
-  else if (isAuthenticated && to.path === '/login') {
+  // If user is authenticated and trying to access login/register
+  else if (isAuthenticated && (to.path === '/login' || to.path === '/register')) {
     next('/home')
   }
   else {

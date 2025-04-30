@@ -1,12 +1,12 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../views/Home.vue'
+import CrewList from '../views/CrewList.vue'
 import GameSchedule from '../views/GameSchedule.vue'
 import SubmitAvailability from '../views/SubmitAvailability.vue'
 import Admin from '../views/Admin.vue'
 import ManageCrew from '../views/ManageCrew.vue'
 import Login from '../views/Login.vue'
-import CrewMemberList from '../views/CrewMemberList.vue'
-import CrewList from '../views/CrewList.vue'
+import CrewMemberProfile from '../views/CrewMemberProfile.vue'
 
 const routes = [
   {
@@ -19,13 +19,8 @@ const routes = [
     component: Home
   },
   {
-    path: '/crew-members',
-    name: 'CrewMembers',
-    component: CrewMemberList
-  },
-  {
-    path: '/game-assignments',
-    name: 'GameAssignments',
+    path: '/crewlist',
+    name: 'CrewList',
     component: CrewList
   },
   {
@@ -52,6 +47,11 @@ const routes = [
     path: '/login',
     name: 'Login',
     component: Login
+  },
+  {
+    path: '/crew-member/:id',
+    name: 'CrewMemberProfile',
+    component: CrewMemberProfile
   }
 ]
 

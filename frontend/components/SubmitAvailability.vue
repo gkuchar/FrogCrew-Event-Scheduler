@@ -1,84 +1,102 @@
 <template>
-    <div class="submit-availability bg-white rounded-lg shadow-xl p-8">
-      <h1 class="text-3xl font-bold text-center text-purple-700 mb-8">Submit Your Availability</h1>
-      <form @submit.prevent="submitAvailability" class="space-y-6">
-        <div v-for="game in availableGames" :key="game.id" class="game-item bg-gray-50 rounded-lg p-6 hover:shadow-md transition-shadow duration-300">
-          <h3 class="text-xl font-semibold text-gray-800 mb-4">{{ game.name }}</h3>
-          <div class="flex items-center space-x-6">
-            <label class="flex items-center space-x-2 cursor-pointer">
-              <input
-                type="radio"
-                v-model="game.isAvailable"
-                :value="true"
-                name="availability"
-                class="form-radio h-5 w-5 text-purple-600"
-              />
-              <span class="text-gray-700">Available</span>
-            </label>
-            <label class="flex items-center space-x-2 cursor-pointer">
-              <input
-                type="radio"
-                v-model="game.isAvailable"
-                :value="false"
-                name="availability"
-                class="form-radio h-5 w-5 text-purple-600"
-              />
-              <span class="text-gray-700">Not Available</span>
-            </label>
-          </div>
-        </div>
-        <div class="flex justify-center mt-8">
-          <button 
-            type="submit" 
-            class="bg-purple-600 text-white py-3 px-8 rounded-lg text-lg font-semibold hover:bg-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
-          >
-            Submit Availability
-          </button>
-        </div>
-      </form>
+  <div class="submit-availability bg-white rounded-lg shadow-xl p-8">
+    <h1 class="text-3xl font-bold text-left text-purple-700 mb-8">Available Shifts</h1>
+    <div class="overflow-x-auto">
+      <table class="min-w-full bg-white rounded mb-8">
+        <thead>
+          <tr class="bg-gray-100 text-gray-700 border-b">
+            <th class="px-4 py-3 text-left font-semibold">Game</th>
+            <th class="px-4 py-3 text-left font-semibold">Date</th>
+            <th class="px-4 py-3 text-left font-semibold">Time</th>
+            <th class="px-4 py-3 text-left font-semibold">Venue</th>
+            <th class="px-4 py-3 text-left font-semibold">Availability</th>
+            <th class="px-4 py-3 text-left font-semibold">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="game in availableGames" :key="game.id" class="border-b last:border-b-0">
+            <td class="px-4 py-3">{{ game.game || game.opponent }}</td>
+            <td class="px-4 py-3">{{ game.date }}</td>
+            <td class="px-4 py-3">{{ game.time }}</td>
+            <td class="px-4 py-3">{{ game.venue }}</td>
+            <td class="px-4 py-3">
+              <label class="inline-flex items-center mr-3">
+                <input type="radio" v-model="game.isAvailable" :value="true" class="form-radio h-4 w-4 text-purple-600" />
+                <span class="ml-1 text-gray-700 text-sm">Available</span>
+              </label>
+              <label class="inline-flex items-center">
+                <input type="radio" v-model="game.isAvailable" :value="false" class="form-radio h-4 w-4 text-purple-600" />
+                <span class="ml-1 text-gray-700 text-sm">Not Available</span>
+              </label>
+            </td>
+            <td class="px-4 py-3">
+              <button 
+                :disabled="game.isAvailable === null"
+                @click="submitAvailability(game)"
+                class="bg-purple-600 text-white px-4 py-1 rounded font-semibold text-sm hover:bg-purple-700 disabled:opacity-50"
+              >
+                Submit
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-  </template>
-  
-  <script>
-  export default {
-    name: "SubmitAvailability",
-    data() {
-      return {
-        availableGames: [
-          { id: 1, name: "Game 1 - Soccer", isAvailable: null },
-          { id: 2, name: "Game 2 - Basketball", isAvailable: null },
-          // Add more mock games here
-        ]
-      };
-    },
-    methods: {
-      submitAvailability() {
-        // Here we mock sending the availability data
-        const availabilityData = this.availableGames.filter(game => game.isAvailable !== null);
-        console.log('Submitted Availability:', availabilityData);
-        // Ideally, send this data to your backend API here
-        alert('Your availability has been submitted!');
-      }
+    <div v-if="success" class="mt-4 text-green-600 text-center">{{ success }}</div>
+  </div>
+</template>
+
+<script>
+export default {
+  name: "SubmitAvailability",
+  data() {
+    return {
+      availableGames: [],
+      submittedAvailabilities: [],
+      success: ''
+    };
+  },
+  created() {
+    // Load published games from localStorage
+    const published = JSON.parse(localStorage.getItem('publishedSchedules') || '[]')
+    // Load submitted availabilities
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}')
+    this.submittedAvailabilities = JSON.parse(localStorage.getItem('submittedAvailabilities') || '[]')
+    // Only show games not already submitted for
+    this.availableGames = published.filter(game => !this.submittedAvailabilities.some(a => a.shiftId === game.id && a.userId === currentUser.id)).map(game => ({ ...game, isAvailable: null }))
+  },
+  methods: {
+    submitAvailability(game) {
+      const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}')
+      if (game.isAvailable === null) return
+      // Save availability
+      this.submittedAvailabilities.push({ shiftId: game.id, userId: currentUser.id, available: game.isAvailable, date: new Date().toISOString() })
+      localStorage.setItem('submittedAvailabilities', JSON.stringify(this.submittedAvailabilities))
+      this.success = 'Your availability has been saved!'
+      // Remove from list
+      this.availableGames = this.availableGames.filter(g => g.id !== game.id)
+      setTimeout(() => (this.success = ''), 2000)
     }
-  };
-  </script>
-  
-  <style scoped>
-  .submit-availability {
-    max-width: 800px;
-    margin: auto;
   }
-  
-  .game-item {
-    border: 1px solid #e5e7eb;
-  }
+}
+</script>
 
-  .form-radio {
-    border-color: #d1d5db;
-  }
+<style scoped>
+.submit-availability {
+  max-width: 1000px;
+  margin: auto;
+}
 
-  .form-radio:checked {
-    border-color: #9333ea;
-    background-color: #9333ea;
-  }
-  </style> 
+th, td {
+  font-size: 1rem;
+}
+
+.form-radio {
+  border-color: #d1d5db;
+}
+
+.form-radio:checked {
+  border-color: #9333ea;
+  background-color: #9333ea;
+}
+</style> 

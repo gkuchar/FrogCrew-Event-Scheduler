@@ -7,61 +7,6 @@
         <p class="mt-2 text-gray-600">View upcoming games and available positions</p>
       </div>
 
-      <!-- Admin: Create Game Schedule Button -->
-      <div v-if="isAdmin" class="mb-6 flex justify-center">
-        <button @click="showCreateForm = !showCreateForm" class="bg-purple-600 text-white px-6 py-2 rounded font-bold hover:bg-purple-700 shadow">
-          {{ showCreateForm ? 'Cancel' : 'Create Game Schedule' }}
-        </button>
-      </div>
-
-      <!-- Admin: Create Game Schedule Form -->
-      <div v-if="isAdmin && showCreateForm" class="mb-8 bg-white p-6 rounded shadow-md max-w-2xl mx-auto">
-        <h2 class="text-xl font-bold mb-4">Create New Game Schedule</h2>
-        <form @submit.prevent="submitSchedule">
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Game</label>
-            <input v-model="newSchedule.game" type="text" required class="w-full border rounded px-3 py-2" />
-          </div>
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
-            <input v-model="newSchedule.date" type="date" required class="w-full border rounded px-3 py-2" />
-          </div>
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Time</label>
-            <input v-model="newSchedule.time" type="time" required class="w-full border rounded px-3 py-2" />
-          </div>
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Venue</label>
-            <input v-model="newSchedule.venue" type="text" required class="w-full border rounded px-3 py-2" />
-          </div>
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Details</label>
-            <textarea v-model="newSchedule.details" class="w-full border rounded px-3 py-2" rows="2"></textarea>
-          </div>
-          <div class="flex gap-4">
-            <button type="submit" class="bg-purple-600 text-white px-6 py-2 rounded font-bold hover:bg-purple-700">Save as Draft</button>
-            <button type="button" @click="publishSchedule" class="bg-green-600 text-white px-6 py-2 rounded font-bold hover:bg-green-700">Submit Schedule</button>
-          </div>
-          <div v-if="formError" class="mt-2 text-red-600">{{ formError }}</div>
-          <div v-if="formSuccess" class="mt-2 text-green-600">{{ formSuccess }}</div>
-        </form>
-      </div>
-
-      <!-- Admin: Draft Schedules -->
-      <div v-if="isAdmin && draftSchedules.length" class="mb-8 max-w-2xl mx-auto">
-        <h2 class="text-lg font-bold mb-2">Draft Schedules</h2>
-        <!-- eslint-disable-next-line vue/no-unused-vars -->
-        <div v-for="draft in draftSchedules" :key="draft.id" class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-2 rounded">
-          <div class="flex justify-between items-center">
-            <div>
-              <strong>{{ draft.game }}</strong> - {{ draft.date }} {{ draft.time }} at {{ draft.venue }}
-              <div class="text-xs text-gray-600">{{ draft.details }}</div>
-            </div>
-            <button @click="editDraft(draft.id)" class="ml-4 text-purple-700 hover:underline">Edit</button>
-          </div>
-        </div>
-      </div>
-
       <!-- Notifications -->
       <div v-if="hasNewScheduleUpdate" class="mb-4 bg-purple-100 border-l-4 border-purple-500 text-purple-700 p-4 rounded">
         <div class="flex items-center">
@@ -107,30 +52,24 @@
       <!-- Game List -->
       <div v-if="filteredGames.length > 0" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <div
-          v-for="game in filteredGames" :key="game.id"
-          class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer relative"
+          v-for="game in filteredGames"
+          :key="game.id"
+          class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer"
           @click="openGameDetails(game)"
         >
-          <!-- Delete button for admin -->
           <div class="flex justify-between items-start mb-4">
             <div>
-              <h3 class="text-lg font-semibold text-gray-900">{{ game.opponent || game.game }}</h3>
+              <h3 class="text-lg font-semibold text-gray-900">{{ game.opponent }}</h3>
               <p class="text-sm text-gray-500">{{ game.venue }}</p>
             </div>
-            <div class="flex items-center gap-2">
-              <span class="px-2 py-1 text-xs font-medium rounded-full"
-                :class="{
-                  'bg-green-100 text-green-800': game.hasOpenPositions,
-                  'bg-gray-100 text-gray-800': !game.hasOpenPositions
-                }"
-              >
-                {{ game.hasOpenPositions ? 'Open Positions' : 'Fully Staffed' }}
-              </span>
-              <button v-if="isAdmin" @click.stop.prevent="confirmDeleteSchedule(game.id)" class="ml-2 flex items-center border border-red-600 text-red-600 px-2 py-1 rounded text-xs font-bold hover:bg-red-50 hover:text-white hover:bg-red-600 transition">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                Delete
-              </button>
-            </div>
+            <span class="px-2 py-1 text-xs font-medium rounded-full"
+              :class="{
+                'bg-green-100 text-green-800': game.hasOpenPositions,
+                'bg-gray-100 text-gray-800': !game.hasOpenPositions
+              }"
+            >
+              {{ game.hasOpenPositions ? 'Open Positions' : 'Fully Staffed' }}
+            </span>
           </div>
 
           <div class="space-y-2">
@@ -270,21 +209,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Delete Confirmation Modal -->
-    <div v-if="showDeleteConfirm" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-      <div class="bg-white rounded shadow-lg flex flex-col items-center justify-center w-[350px] h-[350px] mx-auto">
-        <h2 class="text-base font-bold mb-2 text-center">Confirm Delete</h2>
-        <p class="text-xs mb-4 text-center">Are you sure you want to delete this schedule?</p>
-        <div class="flex justify-center gap-2 mt-2">
-          <button @click="cancelDeleteSchedule" class="px-2 py-1 rounded bg-gray-200 hover:bg-gray-300 text-xs">Cancel</button>
-          <button @click="actuallyDeleteSchedule" class="flex items-center border border-red-600 text-red-600 px-2 py-1 rounded text-xs font-bold hover:bg-red-50 hover:text-white hover:bg-red-600 transition shadow">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-            Delete
-          </button>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -299,16 +223,7 @@ export default {
       sortBy: 'date',
       selectedGame: null,
       hasNewScheduleUpdate: false,
-      games: [],
-      showCreateForm: false,
-      newSchedule: { game: '', date: '', time: '', venue: '', details: '' },
-      formError: '',
-      formSuccess: '',
-      draftSchedules: [],
-      isAdmin: false,
-      publishedSchedules: [],
-      showDeleteConfirm: false,
-      scheduleToDelete: null
+      games: []
     }
   },
   computed: {
@@ -371,75 +286,10 @@ export default {
       } catch (error) {
         console.error('Error loading game schedule:', error)
       }
-    },
-    submitSchedule() {
-      // Validate
-      if (!this.newSchedule.game || !this.newSchedule.date || !this.newSchedule.time || !this.newSchedule.venue) {
-        this.formError = 'Please fill in all required fields.'
-        this.formSuccess = ''
-        return
-      }
-      this.formError = ''
-      // Save as draft
-      const draft = { ...this.newSchedule, id: Date.now() }
-      this.draftSchedules.push(draft)
-      localStorage.setItem('draftSchedules', JSON.stringify(this.draftSchedules))
-      this.formSuccess = 'Schedule saved as draft! You can edit it before publishing.'
-      // Reset form
-      this.newSchedule = { game: '', date: '', time: '', venue: '', details: '' }
-    },
-    editDraft(id) {
-      this.newSchedule = this.draftSchedules.find(d => d.id === id)
-      this.showCreateForm = true
-      // Remove from drafts
-      this.draftSchedules = this.draftSchedules.filter(d => d.id !== id)
-      localStorage.setItem('draftSchedules', JSON.stringify(this.draftSchedules))
-    },
-    publishSchedule() {
-      // Validate
-      if (!this.newSchedule.game || !this.newSchedule.date || !this.newSchedule.time || !this.newSchedule.venue) {
-        this.formError = 'Please fill in all required fields.'
-        this.formSuccess = ''
-        return
-      }
-      this.formError = ''
-      // Save as published schedule
-      const published = { ...this.newSchedule, id: Date.now(), published: true }
-      this.publishedSchedules.push(published)
-      localStorage.setItem('publishedSchedules', JSON.stringify(this.publishedSchedules))
-      this.formSuccess = 'Schedule submitted and published!'
-      // Add to games list so it appears immediately
-      this.games.unshift(published)
-      // Reset form
-      this.newSchedule = { game: '', date: '', time: '', venue: '', details: '' }
-    },
-    confirmDeleteSchedule(id) {
-      this.showDeleteConfirm = true;
-      this.scheduleToDelete = id;
-    },
-    actuallyDeleteSchedule() {
-      const id = this.scheduleToDelete;
-      this.games = this.games.filter(g => g.id !== id)
-      this.publishedSchedules = this.publishedSchedules.filter(g => g.id !== id)
-      localStorage.setItem('publishedSchedules', JSON.stringify(this.publishedSchedules))
-      this.showDeleteConfirm = false;
-      this.scheduleToDelete = null;
-    },
-    cancelDeleteSchedule() {
-      this.showDeleteConfirm = false;
-      this.scheduleToDelete = null;
     }
   },
   async created() {
     await this.loadGameSchedule()
-    // Set isAdmin from localStorage
-    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}')
-    this.isAdmin = currentUser?.role === 'Admin'
-    // Load drafts
-    this.draftSchedules = JSON.parse(localStorage.getItem('draftSchedules') || '[]')
-    this.publishedSchedules = JSON.parse(localStorage.getItem('publishedSchedules') || '[]')
-    // Add published schedules to games list
-    this.games = [...this.publishedSchedules, ...this.games]
   }
 }
 </script>
