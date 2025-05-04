@@ -114,10 +114,10 @@
           <!-- Delete button for admin -->
           <div class="flex justify-between items-start mb-4">
             <div>
-              <h3 class="text-lg font-semibold text-gray-900">{{ game.opponent || game.game }}</h3>
+              <h3 class="text-lg font-semibold text-gray-900">{{ game.opponent }}</h3>
               <p class="text-sm text-gray-500">{{ game.venue }}</p>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-1 max-w-full">
               <span class="px-2 py-1 text-xs font-medium rounded-full"
                 :class="{
                   'bg-green-100 text-green-800': game.hasOpenPositions,
@@ -126,7 +126,13 @@
               >
                 {{ game.hasOpenPositions ? 'Open Positions' : 'Fully Staffed' }}
               </span>
-              <button v-if="isAdmin" @click.stop.prevent="confirmDeleteSchedule(game.id)" class="ml-2 flex items-center border border-red-600 text-red-600 px-2 py-1 rounded text-xs font-bold hover:bg-red-50 hover:text-white hover:bg-red-600 transition">
+              <button v-if="isAdmin" @click.stop.prevent="editGame(game)" class="flex items-center border border-purple-600 text-purple-600 px-2 py-1 rounded text-xs font-bold hover:bg-purple-50 hover:text-purple-700 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Edit
+              </button>
+              <button v-if="isAdmin" @click.stop.prevent="confirmDeleteSchedule(game.id)" class="flex items-center border border-red-600 text-red-600 px-2 py-1 rounded text-xs font-bold hover:bg-red-50 hover:text-white hover:bg-red-600 transition h-7 min-w-[60px] justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                 Delete
               </button>
@@ -245,12 +251,20 @@
                     <p class="text-sm font-medium text-gray-900">{{ crew.name }}</p>
                     <p class="text-xs text-gray-500">{{ crew.position }}</p>
                   </div>
-                  <a
-                    :href="'mailto:' + crew.email"
-                    class="text-purple-600 hover:text-purple-700 text-sm"
-                  >
-                    Contact
-                  </a>
+                  <div class="flex gap-2 items-center">
+                    <a
+                      :href="'mailto:' + crew.email"
+                      class="text-purple-600 hover:text-purple-700 text-sm"
+                    >
+                      Contact
+                    </a>
+                    <button
+                      class="px-2 py-1 bg-purple-600 text-white rounded text-xs hover:bg-purple-700"
+                      @click="showCrewDetails(crew)"
+                    >
+                      View Details
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -285,6 +299,76 @@
         </div>
       </div>
     </div>
+
+    <!-- Crew Member Details Modal -->
+    <div v-if="crewDetailsModal" class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40">
+      <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative">
+        <button @click="crewDetailsModal = false" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700">&times;</button>
+        <h2 class="text-xl font-bold mb-4 text-purple-700">Crew Member Details</h2>
+        <div v-if="crewDetails">
+          <div class="space-y-2">
+            <div><span class="font-semibold">Name:</span> {{ crewDetails.firstName || crewDetails.name }} {{ crewDetails.lastName || '' }}</div>
+            <div><span class="font-semibold">Email:</span> {{ crewDetails.email }}</div>
+            <div><span class="font-semibold">Phone:</span> {{ crewDetails.phone || 'N/A' }}</div>
+            <div><span class="font-semibold">Role:</span> {{ crewDetails.role || 'N/A' }}</div>
+            <div><span class="font-semibold">Qualified Position:</span> {{ crewDetails.qualifiedPosition || crewDetails.position || 'N/A' }}</div>
+          </div>
+        </div>
+        <div v-else>
+          <p class="text-gray-500">No additional details found for this crew member.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Game Form Modal -->
+    <div v-if="editingGame" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+      <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full">
+        <div class="p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold">Edit Game Schedule</h2>
+            <button @click="editingGame = null" class="text-gray-400 hover:text-gray-500">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <form @submit.prevent="updateGame">
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Opponent (Game Title)</label>
+              <input v-model="editingGame.opponent" type="text" required class="w-full border rounded px-3 py-2" />
+            </div>
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Sport Type</label>
+              <input v-model="editingGame.sportType" type="text" required class="w-full border rounded px-3 py-2" />
+            </div>
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+              <input v-model="editingGame.date" type="date" required class="w-full border rounded px-3 py-2" />
+            </div>
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Time</label>
+              <input v-model="editingGame.time" type="time" required class="w-full border rounded px-3 py-2" />
+            </div>
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Venue</label>
+              <input v-model="editingGame.venue" type="text" required class="w-full border rounded px-3 py-2" />
+            </div>
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Required Positions</label>
+              <input v-model="editingGame.requiredPositions" type="text" placeholder="ex: Camera, Replay" class="w-full border rounded px-3 py-2" />
+            </div>
+            <div class="flex justify-end gap-4">
+              <button type="button" @click="editingGame = null" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                Cancel
+              </button>
+              <button type="submit" class="px-4 py-2 bg-purple-600 text-white rounded-md text-sm font-medium hover:bg-purple-700">
+                Save Changes
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -308,7 +392,10 @@ export default {
       isAdmin: false,
       publishedSchedules: [],
       showDeleteConfirm: false,
-      scheduleToDelete: null
+      scheduleToDelete: null,
+      crewDetailsModal: false,
+      crewDetails: null,
+      editingGame: null,
     }
   },
   computed: {
@@ -318,11 +405,18 @@ export default {
       // Apply search filter
       if (this.searchQuery) {
         const query = this.searchQuery.toLowerCase()
-        filtered = filtered.filter(game => 
-          game.opponent.toLowerCase().includes(query) ||
-          game.venue.toLowerCase().includes(query) ||
-          game.requiredPositions.some(pos => pos.toLowerCase().includes(query))
-        )
+        filtered = filtered.filter(game => {
+          // Safely check if properties exist before accessing them
+          const opponent = game?.opponent || ''
+          const venue = game?.venue || ''
+          const positions = game?.requiredPositions || []
+          
+          return (
+            opponent.toLowerCase().includes(query) ||
+            venue.toLowerCase().includes(query) ||
+            positions.some(pos => pos && pos.toLowerCase().includes(query))
+          )
+        })
       }
 
       // Apply sorting
@@ -331,9 +425,9 @@ export default {
           case 'date':
             return new Date(b.date) - new Date(a.date)
           case 'opponent':
-            return a.opponent.localeCompare(b.opponent)
+            return (a.opponent || '').localeCompare(b.opponent || '')
           case 'venue':
-            return a.venue.localeCompare(b.venue)
+            return (a.venue || '').localeCompare(b.venue || '')
           default:
             return 0
         }
@@ -428,7 +522,49 @@ export default {
     cancelDeleteSchedule() {
       this.showDeleteConfirm = false;
       this.scheduleToDelete = null;
-    }
+    },
+    showCrewDetails(crew) {
+      // Try to find more details in localStorage
+      const crewMembers = JSON.parse(localStorage.getItem('crewMembers') || '[]');
+      const found = crewMembers.find(m => m.id == crew.id || m.email === crew.email || (m.firstName + ' ' + m.lastName) === crew.name);
+      this.crewDetails = found || crew;
+      this.crewDetailsModal = true;
+    },
+    editGame(game) {
+      this.editingGame = { ...game };
+      // Convert requiredPositions array to comma-separated string for editing
+      if (Array.isArray(this.editingGame.requiredPositions)) {
+        this.editingGame.requiredPositions = this.editingGame.requiredPositions.join(', ');
+      } else if (typeof this.editingGame.requiredPositions === 'string') {
+        // do nothing, already a string
+      } else {
+        this.editingGame.requiredPositions = '';
+      }
+    },
+    updateGame() {
+      if (!this.editingGame) return;
+      // Convert requiredPositions string back to array, handle undefined/null/empty
+      let reqPos = this.editingGame.requiredPositions;
+      let requiredPositionsArr = [];
+      if (typeof reqPos === 'string' && reqPos.trim() !== '') {
+        requiredPositionsArr = reqPos.split(',').map(pos => pos.trim()).filter(Boolean);
+      }
+      const updatedGame = {
+        ...this.editingGame,
+        requiredPositions: requiredPositionsArr
+      };
+      // Update the game in the games array
+      const index = this.games.findIndex(g => g.id === updatedGame.id);
+      if (index !== -1) {
+        this.games[index] = updatedGame;
+      }
+      // Update localStorage
+      localStorage.setItem('games', JSON.stringify(this.games));
+      // Close the edit modal
+      this.editingGame = null;
+      // Show success message
+      alert('Game schedule updated successfully!');
+    },
   },
   async created() {
     await this.loadGameSchedule()

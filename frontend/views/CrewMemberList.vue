@@ -13,6 +13,7 @@
           <option value="name">Sort by Name</option>
           <option value="role">Sort by Role</option>
         </select>
+        <button v-if="isAdmin" @click="goToInvite" class="bg-purple-600 text-white px-4 py-2 rounded font-semibold hover:bg-purple-700 transition-colors">Invite</button>
       </div>
 
       <!-- Crew Members Table -->
@@ -231,6 +232,9 @@ export default {
     deleteMember(id) {
       this.crewMembers = this.crewMembers.filter(m => m.id !== id);
       localStorage.setItem('crewMembers', JSON.stringify(this.crewMembers));
+    },
+    goToInvite() {
+      this.$router.push('/invite');
     }
   }
 }

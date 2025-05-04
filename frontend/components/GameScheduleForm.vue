@@ -1,6 +1,11 @@
 <template>
     <form @submit.prevent="submitSchedule" class="space-y-4">
       <div>
+        <label class="block text-sm font-medium mb-1">Opponent (Game Title):</label>
+        <input v-model="opponent" type="text" class="input-field" required placeholder="e.g., Eagles vs Hawks" />
+      </div>
+  
+      <div>
         <label class="block text-sm font-medium mb-1">Sport Type:</label>
         <input v-model="sportType" type="text" class="input-field" required />
       </div>
@@ -16,11 +21,6 @@
       </div>
   
       <div>
-        <label class="block text-sm font-medium mb-1">Opponent:</label>
-        <input v-model="opponent" type="text" class="input-field" />
-      </div>
-  
-      <div>
         <label class="block text-sm font-medium mb-1">Required Crew Positions:</label>
         <input v-model="crewPositions" type="text" placeholder="ex: Camera, Replay" class="input-field" />
       </div>
@@ -32,21 +32,45 @@
   <script setup>
   import { ref } from 'vue';
   
+  const opponent = ref('');
   const sportType = ref('');
   const gameDateTime = ref('');
   const venue = ref('');
-  const opponent = ref('');
   const crewPositions = ref('');
   
   function submitSchedule() {
-    console.log('Submitting schedule:', {
-      sportType: sportType.value,
-      gameDateTime: gameDateTime.value,
-      venue: venue.value,
+    // Split the datetime into date and time
+    const [date, time] = gameDateTime.value.split('T');
+    
+    // Create the game object in the correct format
+    const newGame = {
+      id: Date.now(),
       opponent: opponent.value,
-      crewPositions: crewPositions.value,
-    });
-    alert('Schedule submitted!');
+      sportType: sportType.value,
+      date: date,
+      time: time,
+      venue: venue.value,
+      requiredPositions: crewPositions.value ? crewPositions.value.split(',').map(pos => pos.trim()) : [],
+      hasOpenPositions: true
+    };
+
+    // Get existing games from localStorage
+    const existingGames = JSON.parse(localStorage.getItem('games') || '[]');
+    
+    // Add the new game
+    existingGames.push(newGame);
+    
+    // Save back to localStorage
+    localStorage.setItem('games', JSON.stringify(existingGames));
+    
+    // Reset form
+    opponent.value = '';
+    sportType.value = '';
+    gameDateTime.value = '';
+    venue.value = '';
+    crewPositions.value = '';
+    
+    alert('Schedule saved successfully!');
   }
   </script>
   
